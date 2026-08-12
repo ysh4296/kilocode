@@ -19,6 +19,7 @@ import { drainCovered } from "@/kilocode/permission/drain"
 import { ReadPermission } from "@/kilocode/permission/read"
 import { AgentManagerPermission } from "@/kilocode/permission/agent-manager" // kilocode_change
 import { ExternalDirectoryPermission } from "@/kilocode/permission/external-directory"
+import { HardBashPolicy } from "@/kilocode/permission/hard-bash-rules"
 // kilocode_change end
 
 export const Event = PermissionV1.Event
@@ -118,12 +119,20 @@ export function resolve(permission: string, pattern: string, ruleset: Ruleset, .
       ? (permission: string, pattern: string, ...sets: Ruleset[]) =>
           ExternalDirectoryPermission.evaluate(permission, pattern, ...sets)
       : evaluate
-  const base = AgentManagerPermission.harden(
+  const base = HardBashPolicy.harden(
     permission,
     pattern,
-    ReadPermission.harden(permission, pattern, evalFn(permission, pattern, ruleset)),
+    AgentManagerPermission.harden(
+      permission,
+      pattern,
+      ReadPermission.harden(permission, pattern, evalFn(permission, pattern, ruleset)),
+    ),
   ) // kilocode_change
-  const saved = AgentManagerPermission.harden(permission, pattern, evalFn(permission, pattern, ...overrides)) // kilocode_change
+  const saved = HardBashPolicy.harden(
+    permission,
+    pattern,
+    AgentManagerPermission.harden(permission, pattern, evalFn(permission, pattern, ...overrides)),
+  ) // kilocode_change
   if (base.action === "deny") return base
   if (saved.action === "deny") return saved
   if (base.action === "ask") {
