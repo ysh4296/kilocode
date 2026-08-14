@@ -70,6 +70,8 @@ export interface AskOutcome {
   manual: boolean
   /** The winning rule (carries an optional `source` marker set at ruleset-build time). */
   rule?: Rule
+  /** The rule that put the call into "ask" (an "ask"-tier rule, not a protected-path/skill override), when manual is true. */
+  askedRule?: Rule
 }
 // kilocode_change end
 
@@ -201,6 +203,7 @@ const layer = Layer.effect(
       // kilocode_change end
       let needsAsk = false
       let approvedRule: Rule | undefined // kilocode_change - remember the rule that auto-approved
+      let askedRule: Rule | undefined // kilocode_change - remember the ask-tier rule that forced a prompt
 
       // kilocode_change start - protect config access while honoring explicit global skill trust
       const isProtected = ConfigProtection.isRequest(request)
@@ -246,6 +249,9 @@ const layer = Layer.effect(
           continue
         }
         // kilocode_change end
+        // kilocode_change start - remember the ask-tier rule so callers can explain why it's asking
+        if (rule.action === "ask") askedRule = rule
+        // kilocode_change end
         needsAsk = true
       }
 
@@ -287,7 +293,7 @@ const layer = Layer.effect(
           pending.delete(id)
         }),
       )
-      return { manual: true } // the user was prompted and replied
+      return { manual: true, askedRule } // the user was prompted and replied
       // kilocode_change end
     })
 

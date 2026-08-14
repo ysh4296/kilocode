@@ -302,6 +302,7 @@ export const dict = {
   "ui.approval.source.yolo": "โดยโหมดอนุมัติอัตโนมัติ (YOLO)",
   "ui.approval.source.session": "โดยกฎอนุมัติอัตโนมัติของเซสชัน",
   "ui.approval.source.default": "ตามค่าเริ่มต้น",
+  "ui.approval.source.hard": "โดยนโยบายในตัวของแพลตฟอร์ม AI",
   "ui.approval.outsideWorkspace": "(นอกพื้นที่ทำงานของคุณ: {{file}})",
 
   "session.tab.review": "ตรวจสอบ",

@@ -10,13 +10,19 @@ import { Icon } from "./icon"
  * free of any i18n key coupling.
  */
 export type ToolApproval = {
-  source: "agent" | "global" | "project" | "yolo" | "session" | "manual" | "default"
+  source: "agent" | "global" | "project" | "yolo" | "session" | "manual" | "default" | "hard"
   agent?: string
   rule?: { permission: string; pattern: string; action: string }
   /** True when the tool call's target path was outside the workspace/worktree. */
   outsideWorkspace?: boolean
   /** The target file path, when known, for display as a filename next to the note above. */
   outsideWorkspacePath?: string
+  /**
+   * True when a human answered a prompt, regardless of *why* it prompted — distinct from
+   * `source`, which explains why (e.g. `source: "hard"` + `manual: true` is a hard ask-tier
+   * rule a human then answered). Absent on older persisted data; falls back to `source === "manual"`.
+   */
+  manual?: boolean
 }
 
 /** Pre-resolved, localized text plus the raw approval, supplied by the caller. */
@@ -28,7 +34,7 @@ export type ToolApprovalDisplay = {
   outsideWorkspace?: string
 }
 
-const SOURCE_KEYS = ["agent", "global", "project", "yolo", "session", "manual", "default"] as const
+const SOURCE_KEYS = ["agent", "global", "project", "yolo", "session", "manual", "default", "hard"] as const
 
 const Context = createContext<Accessor<ToolApprovalDisplay | undefined>>(() => undefined)
 
@@ -91,9 +97,11 @@ export function resolveToolApproval(
   // Only worth calling out when we know which file it was; a bare "outside your workspace" note
   // without a filename (e.g. a bash command touching several directories) isn't actionable.
   const filename = approval.outsideWorkspacePath ? getFilename(approval.outsideWorkspacePath) : undefined
+  // Older persisted tool parts predate the explicit `manual` flag; infer it from `source` for those.
+  const manual = approval.manual ?? approval.source === "manual"
   return {
     approval,
-    decision: approval.source === "manual" ? t("ui.approval.manual") : t("ui.approval.auto"),
+    decision: manual ? t("ui.approval.manual") : t("ui.approval.auto"),
     source: sourceText(),
     rule: ruleText,
     outsideWorkspace:
@@ -103,15 +111,12 @@ export function resolveToolApproval(
 
 /** The single "why was this allowed" line shown inside a tool row's expanded body. */
 export function ToolApprovalLine(props: { display: ToolApprovalDisplay }) {
-  const manual = () => props.display.approval.source === "manual"
   return (
     <div data-slot="tool-approval-line" data-source={props.display.approval.source}>
       <Icon name="shield" size="small" />
       <span data-slot="tool-approval-decision">{props.display.decision}</span>
-      <Show when={!manual()}>
-        <Show when={props.display.source}>{(text) => <span data-slot="tool-approval-source">{text()}</span>}</Show>
-        <Show when={props.display.rule}>{(text) => <span data-slot="tool-approval-rule">{text()}</span>}</Show>
-      </Show>
+      <Show when={props.display.source}>{(text) => <span data-slot="tool-approval-source">{text()}</span>}</Show>
+      <Show when={props.display.rule}>{(text) => <span data-slot="tool-approval-rule">{text()}</span>}</Show>
       <Show when={props.display.outsideWorkspace}>
         {(text) => <span data-slot="tool-approval-outside-workspace">{text()}</span>}
       </Show>

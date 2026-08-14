@@ -302,6 +302,7 @@ export const dict = {
   "ui.approval.source.yolo": "by auto-approve (YOLO) mode",
   "ui.approval.source.session": "by a session auto-approve rule",
   "ui.approval.source.default": "by default",
+  "ui.approval.source.hard": "by the AI platform's built-in policy",
   "ui.approval.outsideWorkspace": "(outside your workspace: {{file}})",
 
   "session.tab.review": "Review",

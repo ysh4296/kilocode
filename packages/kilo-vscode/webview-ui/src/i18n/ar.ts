@@ -297,6 +297,7 @@ export const dict = {
   "ui.approval.source.yolo": "بواسطة وضع الموافقة التلقائية (YOLO)",
   "ui.approval.source.session": "بواسطة قاعدة موافقة تلقائية للجلسة",
   "ui.approval.source.default": "افتراضيًا",
+  "ui.approval.source.hard": "بواسطة سياسة منصة الذكاء الاصطناعي المدمجة",
   "ui.approval.outsideWorkspace": "(خارج مساحة العمل: {{file}})",
 
   "session.tab.review": "مراجعة",

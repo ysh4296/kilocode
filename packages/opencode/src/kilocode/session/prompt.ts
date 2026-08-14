@@ -273,7 +273,15 @@ export namespace KiloSessionPrompt {
       guardPermissions({ agent: { name: agent.name, permission: taggedAgent }, session: { permission: taggedSession } }),
     )
     const outcome = yield* input.permission.ask({ ...input.request, ruleset, hardRuleset: hardPermissions({ agent }) })
-    if (outcome.manual) return { source: "manual" } satisfies PermissionProvenance.Approval
+    if (outcome.manual) {
+      // kilocode_change - report why the prompt appeared (an "ask"-tier rule), not just that a human answered it
+      if (outcome.askedRule)
+        return {
+          ...PermissionProvenance.classify({ rule: outcome.askedRule, agent: agent.name, origins: input.origins }),
+          manual: true,
+        }
+      return { source: "manual", manual: true } satisfies PermissionProvenance.Approval
+    }
     return PermissionProvenance.classify({ rule: outcome.rule, agent: agent.name, origins: input.origins })
     // kilocode_change end
   })

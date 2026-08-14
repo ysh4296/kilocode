@@ -230,7 +230,16 @@ describe("askPermission returns provenance", () => {
     )
 
   test("manual reply reports the manual source", async () => {
-    expect(await run({ manual: true })).toEqual({ source: "manual" })
+    expect(await run({ manual: true })).toEqual({ source: "manual", manual: true })
+  })
+
+  test("manual reply carrying an ask-tier rule reports why it asked", async () => {
+    const askedRule = { permission: "bash", pattern: "npm install*", action: "ask" as const, source: "hard" as const }
+    expect(await run({ manual: true, askedRule })).toEqual({
+      source: "hard",
+      rule: { permission: "bash", pattern: "npm install*", action: "ask" },
+      manual: true,
+    })
   })
 
   test("agent-default rule classifies as agent with its name", async () => {

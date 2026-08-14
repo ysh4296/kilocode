@@ -31,6 +31,12 @@ export namespace PermissionProvenance {
     outsideWorkspace?: boolean
     /** The target file path, when the `external_directory` ask carried one, for display as a filename. */
     outsideWorkspacePath?: string
+    /**
+     * True when a human answered a prompt (regardless of *why* it prompted). Distinct from
+     * `source`, which explains *why* — e.g. `source: "hard"` with `manual: true` is a hard
+     * ask-tier rule that a human then answered; `source` alone can't carry both facts.
+     */
+    manual?: boolean
   }
 
   /** The `filepath` an `external_directory` ask's metadata carries, if any (see `Tool.assertExternalDirectory`). */

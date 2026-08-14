@@ -2,8 +2,9 @@
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { SessionProjector } from "@opencode-ai/core/session/projector"
 import { expect } from "bun:test"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Effect, Exit, Fiber } from "effect"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
+import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Bus } from "../../../src/bus"
 import * as Config from "../../../src/config/config"
 import { Permission } from "../../../src/permission"
@@ -38,14 +39,14 @@ it.instance(
       if (Exit.isFailure(exit)) {
         const error = Cause.squash(exit.cause)
         expect(error).toBeInstanceOf(Permission.DeniedError)
-        expect((error as Permission.DeniedError).message).toContain("built-in, non-configurable Kilo policy")
+        expect((error as Permission.DeniedError).message).toContain("AIP Platform 팀 내부 규정")
       }
     }),
   { git: true },
 )
 
 it.instance(
-  "still auto-approves ordinary bash commands under the same allow-all config",
+  "auto-approves read-only commands even under a deny-all config",
   () =>
     Effect.gen(function* () {
       const permission = yield* Permission.Service
@@ -55,13 +56,49 @@ it.instance(
       const outcome = yield* permission.ask({
         sessionID: session.id,
         permission: "bash",
-        patterns: ["npm install"],
+        patterns: ["git status"],
         metadata: {},
         always: [],
-        ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        ruleset: [{ permission: "bash", pattern: "*", action: "deny" }],
       })
 
       expect(outcome.manual).toBe(false)
+    }),
+  { git: true },
+)
+
+it.instance(
+  "still prompts for build/VCS-write commands even under an allow-all config",
+  () =>
+    Effect.gen(function* () {
+      const permission = yield* Permission.Service
+      const sessions = yield* Session.Service
+      const session = yield* sessions.create({})
+
+      const id = PermissionV1.ID.make("permission_hard_ask_tier")
+      const pending = yield* permission
+        .ask({
+          id,
+          sessionID: session.id,
+          permission: "bash",
+          patterns: ["npm install"],
+          metadata: {},
+          always: [],
+          ruleset: [{ permission: "bash", pattern: "*", action: "allow" }],
+        })
+        .pipe(Effect.forkScoped)
+
+      // give the ask() fiber a moment to register the pending request
+      for (let i = 0; i < 100; i++) {
+        const items = yield* permission.list()
+        if (items.some((item) => item.id === id)) break
+        yield* Effect.sleep("10 millis")
+      }
+      expect((yield* permission.list()).some((item) => item.id === id)).toBe(true)
+
+      yield* permission.reply({ requestID: id, reply: "once" })
+      const outcome = yield* Fiber.join(pending)
+      expect(outcome.manual).toBe(true)
     }),
   { git: true },
 )

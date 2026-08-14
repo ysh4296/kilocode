@@ -308,6 +308,7 @@ export const dict = {
   "ui.approval.source.yolo": "door de automatische goedkeuringsmodus (YOLO)",
   "ui.approval.source.session": "door een sessie-automatische-goedkeuringsregel",
   "ui.approval.source.default": "standaard",
+  "ui.approval.source.hard": "door het ingebouwde beleid van het AI-platform",
   "ui.approval.outsideWorkspace": "(buiten je werkruimte: {{file}})",
 
   "session.tab.review": "Beoordelen",

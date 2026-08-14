@@ -8,7 +8,7 @@ export function stateMetadata(state: ToolState | undefined) {
   return state && "metadata" in state ? state.metadata : undefined
 }
 
-const SOURCES = ["agent", "global", "project", "yolo", "session", "manual", "default"] as const
+const SOURCES = ["agent", "global", "project", "yolo", "session", "manual", "default", "hard"] as const
 
 /** Read the approval/denial provenance off a tool part's metadata, if present. */
 export function toolApprovalFrom(metadata: Record<string, unknown> | undefined) {
@@ -32,6 +32,8 @@ function sourceLabel(approval: PermissionProvenance.Approval): string | undefine
       return "by a session auto-approve rule"
     case "default":
       return "by default"
+    case "hard":
+      return "by the platform's built-in policy"
     default:
       return undefined
   }
@@ -41,9 +43,9 @@ function sourceLabel(approval: PermissionProvenance.Approval): string | undefine
 export function describeApproval(metadata: Record<string, unknown> | undefined): string | undefined {
   const approval = toolApprovalFrom(metadata)
   if (!approval) return undefined
-  const manual = approval.source === "manual"
+  // Older persisted tool parts predate the explicit `manual` flag; infer it from `source` for those.
+  const manual = approval.manual ?? approval.source === "manual"
   const decision = manual ? "approved by you" : approval.rule?.action === "deny" ? "denied" : "auto-approved"
-  if (manual) return decision
   const source = sourceLabel(approval)
   const rule = approval.rule
   // The catch-all "*"/"*" rule carries no useful detail; let the source alone explain it.

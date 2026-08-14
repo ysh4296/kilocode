@@ -26,7 +26,7 @@ export class DeniedError extends Schema.TaggedErrorClass<DeniedError>()("Permiss
     // from ordinary kilo.jsonc/agent-config denials, so it's clear which layer blocked the call.
     const rule = this.ruleset as { source?: string; permission?: string; pattern?: string } | undefined
     if (rule?.source === "hard") {
-      return `This command is blocked by a built-in, non-configurable Kilo policy (matched "${rule.pattern}" for permission "${rule.permission}"). This is not a kilo.jsonc/agent-config rule, so kilo.jsonc edits, agent permission overrides, and "always allow" cannot re-enable it. Do not retry this command or attempt a workaround; explain the block to the user instead.`
+      return `AIP Platform 팀 내부 규정에 의해 차단된 명령어입니다 (매칭된 패턴: "${rule.pattern}", 권한: "${rule.permission}"). 내부 정책에 따라 이 명령어를 실행할 수 없습니다.`
     }
     // kilocode_change end
     return `The user has specified a rule which prevents you from using this specific tool call. Here are some of the relevant rules ${JSON.stringify(this.ruleset)}`
