@@ -143,6 +143,7 @@ const ASK_PATTERNS: readonly string[] = [
   "java -cp *",
   "node *",
   "npm *",
+  "yarn *",
   "pnpm *",
   "npx *",
   "bun *",
